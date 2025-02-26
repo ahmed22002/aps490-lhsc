@@ -12,7 +12,7 @@ import sys, signal
 
 # Flags
 VERBOSE = 0
-RELATIVE_POSITIONING = 1
+RELATIVE_POSITIONING = 0
 
 
 
@@ -65,14 +65,14 @@ def setup():
     ticcmd('--reset')
     set_velocity(10)
     ticcmd('--resume')
-    time.sleep(4)
+    time.sleep(2.5)
     ticcmd("--deenergize")
     ticcmd("--halt-and-set-position", '27500')
 
     ticcmd('--deenergize')
-    set_velocity(-15)
+    set_velocity(-10)
     ticcmd('--resume')
-    time.sleep(4)
+    time.sleep(2.5)
     ticcmd("--deenergize")
     ticcmd("--halt-and-set-position", '0')
     set_velocity(0)
@@ -81,50 +81,52 @@ def setup():
 def done():
     ticcmd('--reset')
     ticcmd('--resume')
-    set_velocity(-15)
+    set_velocity(-6)
     time.sleep(4)
     ticcmd('--deenergize')
 
 signal.signal(signal.SIGINT, signal_handler)
-setup()
-if RELATIVE_POSITIONING:
-    for i in range(1000):
-        speed = random.randrange(5, 15)
-        relative_position = random.randrange(3437, 10313)
-        set_max_speed(speed)
-        curr_position = get_curr_position()
-        
-        if(curr_position < 27500/2):
-            set_position_relative(relative_position)
-            while(get_curr_position() < curr_position + relative_position): continue
+set_velocity(-6)
+ticcmd('--resume')
+time.sleep(4)
+ticcmd('--deenergize')
+time.sleep(3)
+set_velocity(0)
+ticcmd('--resume')
 
-        else:
-            set_position_relative(relative_position * -1)
-            while(get_curr_position() > curr_position - relative_position): continue
-        
-        if position_uncertain():
-            print("Error: Position Uncertain! Exiting the program\n")
-            done()
-            sys.exit(1)    
+# for i in range(10):
+#     set_velocity(1000, 'steps')
+#     time.sleep(5)
 
-else:
-    for i in range(1000):
-        velocity = random.randrange(5, 15)
-        curr_position = get_curr_position()
-       
-        if(curr_position < 27500/2):
-            target_position = random.randrange(curr_position, 22222)
-            set_velocity(velocity)
-            while(get_curr_position() < target_position): continue
+#     set_velocity(-1000, 'steps')
+#     time.sleep(5)
 
-        else:
-            target_position = random.randrange(4444, curr_position)
-            set_velocity(velocity * -1)
-            while(get_curr_position() > target_position): continue
-        
-        if position_uncertain():
-            print("Error: Position Uncertain! Exiting the program\n")
-            done()
-            sys.exit(1)    
+for i in range(10):
+    set_velocity(6)
+    time.sleep(1.7)
+
+    set_velocity(-6)
+    time.sleep(1.7)
+
+# for i in range(1000):
+
+#     set_velocity(-15)
+#     time.sleep(1.9)
+#     # target_postion = 25000
+#     # while(get_curr_position() < target_position): continue
+
+
+#     set_velocity(15)
+#     time.sleep(1.9)
+#     # target_position = 2500
+#     # while(get_curr_position() > target_position): continue
+
+    
+#     # if position_uncertain():
+#     #     print("Error: Position Uncertain! Exiting the program\n")
+#     #     done()
+#     #     sys.exit(1)    
 
 done()
+
+# 4.2 0.9

@@ -3,18 +3,25 @@
 # NOTE: The Tic's control mode must be "Serial / I2C / USB"
 # in order to set the target position over USB.
 
+import math
 import subprocess
 import yaml
 import time
 import random
 import sys, signal
 
+# constants
+RATIO = 44/11.5
+
 
 # Flags
 VERBOSE = 0
-RELATIVE_POSITIONING = 1
 
-
+def sleep(duration, get_now=time.perf_counter):
+    now = get_now()
+    end = now + duration
+    while now < end:
+        now = get_now()
 
 def signal_handler(sig, frame):
     done()
@@ -37,7 +44,7 @@ def get_cur_velocity():
 
 def set_position(position):
     if VERBOSE: print("Setting target position to {}.".format(position))
-    ticcmd('--position', str(position))
+    ticcmd('--position', str(int((position))))
 
 def set_position_relative(position):
     if VERBOSE: print("Setting realtive position to {}.".format(position))
@@ -65,14 +72,14 @@ def setup():
     ticcmd('--reset')
     set_velocity(10)
     ticcmd('--resume')
-    time.sleep(4)
+    time.sleep(2.5)
     ticcmd("--deenergize")
     ticcmd("--halt-and-set-position", '27500')
 
     ticcmd('--deenergize')
-    set_velocity(-15)
+    set_velocity(-10)
     ticcmd('--resume')
-    time.sleep(4)
+    time.sleep(2.5)
     ticcmd("--deenergize")
     ticcmd("--halt-and-set-position", '0')
     set_velocity(0)
@@ -81,50 +88,85 @@ def setup():
 def done():
     ticcmd('--reset')
     ticcmd('--resume')
-    set_velocity(-15)
-    time.sleep(4)
+    set_velocity(-5)
+    time.sleep(3)
     ticcmd('--deenergize')
 
 signal.signal(signal.SIGINT, signal_handler)
-setup()
-if RELATIVE_POSITIONING:
-    for i in range(1000):
-        speed = random.randrange(5, 15)
-        relative_position = random.randrange(3437, 10313)
-        set_max_speed(speed)
-        curr_position = get_curr_position()
-        
-        if(curr_position < 27500/2):
-            set_position_relative(relative_position)
-            while(get_curr_position() < curr_position + relative_position): continue
+set_velocity(-5)
+ticcmd('--resume')
+time.sleep(3)
+ticcmd('--deenergize')
+set_velocity(0)
+ticcmd('--resume')
 
-        else:
-            set_position_relative(relative_position * -1)
-            while(get_curr_position() > curr_position - relative_position): continue
-        
-        if position_uncertain():
-            print("Error: Position Uncertain! Exiting the program\n")
-            done()
-            sys.exit(1)    
+# f = open("input.qrm")
+# lines = f.readlines()
+# f.close()
 
-else:
-    for i in range(1000):
-        velocity = random.randrange(5, 15)
-        curr_position = get_curr_position()
-       
-        if(curr_position < 27500/2):
-            target_position = random.randrange(curr_position, 22222)
-            set_velocity(velocity)
-            while(get_curr_position() < target_position): continue
+# samples_to_skip = 1
+# sleep_time = (1/1.5)*(samples_to_skip)
+# velocity_list = []
 
-        else:
-            target_position = random.randrange(4444, curr_position)
-            set_velocity(velocity * -1)
-            while(get_curr_position() > target_position): continue
-        
-        if position_uncertain():
-            print("Error: Position Uncertain! Exiting the program\n")
-            done()
-            sys.exit(1)    
+# prev_val = float(lines[3])
+
+# f = open('velocity_list.txt', 'w')
+# biggest = 0
+# for i in range(3+samples_to_skip, 26720, samples_to_skip):
+#     velocity_small = float(10 * (float(lines[i]) - prev_val)/sleep_time)
+#     velocity_big = velocity_small / RATIO
+#     velocity_list.append(velocity_big)
+#     f.write(f"{velocity_small}\n")
+#     biggest = max(biggest, velocity_small)
+#     prev_val = float(lines[i])
+# print(biggest)
+# f.close()
+
+# starting_position_small = 1.2 + float(lines[3])
+# starting_position_big = 10 * starting_position_small / RATIO
+
+# set_velocity(3)
+# sleep(starting_position_big/3)
+
+# for velocity in velocity_list:
+#     set_velocity(velocity)
+#     sleep(sleep_time)
+
+
+####################################
+
+velocity_list = []
+period = math.pi/2
+for j in range(0, 180 * 10, 9):
+    velocity_list.append(4*math.sin(4 * j/360 * math.pi))
+    
+for velocity in velocity_list:
+        #time_start = time.perf_counter()
+        set_velocity(velocity)
+        #print(time.perf_counter() - time_start)
+        if (velocity == 0): continue
+        sleep(period/20)
+
+####################################
+
+
+# set_position(0)
+# position_list = []
+# period = math.pi/2
+# f = open('velocity_list.txt', 'w')
+# for j in range(0, 180 * 10, 9):
+#     pos = (2*math.sin(4 * j/360 * math.pi - math.pi/2) + 2)
+#     position_list.append(pos/0.0018)
+#     f.write(f"{pos ,pos/0.0018}\n")
+# f.close()
+
+# for position in position_list:
+#         #time_start = time.perf_counter()
+#         set_position(position)
+#         while(get_cur_velocity() > 0):
+#             continue
+#         #print(time.perf_counter() - time_start)
+#         # if (math.sin(math.pi * j/180) == 0): continue
 
 done()
+# 4.2 0.9
