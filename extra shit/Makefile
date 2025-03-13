@@ -1,0 +1,2 @@
+default:
+	gcc -o actuator actuator.c  tic_baud_rate.c tic_current_limit.c tic_device.c tic_error.c tic_get_settings.c tic_handle.c tic_names.c tic_set_settings.c tic_settings_fix.c tic_settings_read_from_string.c tic_settings_to_string.c tic_settings.c tic_string.c tic_variables.c yaml.c -I../include `pkg-config --cflags --libs libusbp-1`
