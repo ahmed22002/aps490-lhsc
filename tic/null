@@ -1,0 +1,10 @@
+
+D:\University\Capstone\tic>cd obj 
+
+D:\University\Capstone\tic\obj>del * /q 
+
+D:\University\Capstone\tic\obj>cd .. 
+
+D:\University\Capstone\tic>del actuator.exe 
+
+D:\University\Capstone\tic>del actuator2.exe 

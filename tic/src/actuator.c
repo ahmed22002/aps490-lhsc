@@ -3,9 +3,21 @@
 #include <windows.h>
 #include <time.h>
 #include <math.h> 
+#include <signal.h>
 
+tic_handle *open_handle;
+
+void sigintHandler(int) {
+    tic_deenergize(open_handle);
+    printf("Program aborted earlier!!!\n");
+    exit(0);
+}
 
 int main() {
+   
+    signal(SIGINT, sigintHandler);
+    signal(SIGTERM, sigintHandler);
+
     tic_device **devices;
     size_t device_count;
     tic_error *err;
@@ -13,8 +25,7 @@ int main() {
     if (err != NULL){
         printf("ERROR: %s", tic_error_get_message(err));
     }
-    printf("%d", device_count);
-    tic_handle *open_handle;
+
     err = tic_handle_open(*devices, &open_handle);
     if (err != NULL){
         printf("ERROR: %s", tic_error_get_message(err));
@@ -28,12 +39,14 @@ int main() {
     // fptr = fopen("time.txt", "w");
     // clock_t t;
     // t = clock();
-    for (int i = 0 ; i < 10; i++) {
-        tic_set_target_velocity(open_handle, 5500000 * 5);
-        Sleep(2000);
-        tic_set_target_velocity(open_handle, 5500000 * -5);
-        Sleep(2000);
+
+    for (int i = 0 ; i < 100; i++) {
+        tic_set_target_velocity(open_handle, 5500000 * 4);
+        Sleep(1500);
+        tic_set_target_velocity(open_handle, 5500000 * -4);
+        Sleep(1500);
     }
+    
     // fprintf(fptr, "%lf\t", ((double)(clock() - t))/(double)CLOCKS_PER_SEC);
     // fclose(fptr);
 
